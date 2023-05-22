@@ -1,7 +1,8 @@
 #pragma once
-
 #define SQR(X) ((X)*(X))
 #define KERNEL_SIZE(X) (2*(X) + 1)
+
+#include <cstring>
 
 namespace CG2 {
 
