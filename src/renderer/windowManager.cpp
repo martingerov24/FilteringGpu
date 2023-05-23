@@ -10,7 +10,7 @@ void WindowManager::bindTexture() {
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 }
 
-void WindowManager::onNewFrame() {
+void WindowManager::onNewFrame() const{
     glfwPollEvents();
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -44,7 +44,7 @@ bool WindowManager::init() {
         throw "glfwInit() FAILED!";
     }
 
-    window = glfwCreateWindow(800, 600, "Raw-File Viewer", NULL, NULL);
+    window = glfwCreateWindow(800, 600, "Image Viewer", NULL, NULL);
 
     if (!window) {
         glfwTerminate();
@@ -65,13 +65,13 @@ void WindowManager::terminate() {
     glfwDestroyWindow(window);
 }
 
-bool WindowManager::draw(const uint8_t* output, const ImageParams& params) {
+bool WindowManager::draw(const uint8_t* output, const ImageParams& params) const {
     if(output==nullptr) {
         return false;
     }
     bool is_show = true;
     onNewFrame();
-    ImGui::Begin("raw Image", &is_show);
+    ImGui::Begin("Image", &is_show);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, params.width, params.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, output);
     ImGui::Image(reinterpret_cast<void*>(static_cast<intptr_t>(texture)), ImVec2(800, 600));
     ImGui::End();

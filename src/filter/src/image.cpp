@@ -6,9 +6,9 @@
 #include <assert.h>
 #include <algorithm>
 
-typedef unsigned long long uint64;
+typedef unsigned long long uint64_t;
 
-namespace CG2 {
+namespace supreme {
 
 template<typename T>
 inline T clamp(const T& val, const T& minVal, const T& maxVal) { return std::min(std::max(val, minVal), maxVal); }
@@ -57,6 +57,9 @@ Image::Image(const std::string & fileName) {
 }
 
 inline void Image::freeImage() {
+	if(data == nullptr) {
+		return;
+	}
 	delete [] data;
 	data = NULL;
 	valid = 0;
@@ -121,8 +124,9 @@ const float scalar = 1.f / 255.f;
 
 int Image::loadFromFile(const std::string & fileName) {
 	unsigned char* img = stbi_load(fileName.c_str(), &width, &height, &channels, 1);
-	if (img == NULL) { return 0; }
-	unsigned char* image_in_bytes = reinterpret_cast<unsigned char*>(data);	
+	if (img == NULL) { return -1; }
+	allocateImage(width, height);
+	unsigned char* image_in_bytes = reinterpret_cast<unsigned char*>(data);
 	memcpy(&image_in_bytes[0], img, getMemUsage());
 	stbi_image_free(img);
 	return 0;
@@ -139,7 +143,7 @@ int         Image::getHeight()   const              { return height; }
 int 		Image::getChannels() const 				{ return channels; }
 bool        Image::isValid()     const              { return valid; }
 Color*      Image::getData()     const              { return data; }
-uint64      Image::getMemUsage() const              { return width*height*sizeof(Color); }
+uint64_t      Image::getMemUsage() const              { return width*height*sizeof(Color); }
 std::string Image::getName()     const              { return name; }
 
 }

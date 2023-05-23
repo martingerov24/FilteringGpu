@@ -1,4 +1,3 @@
-#include <glew.h>
 #include "demoFilters.h"
 #include "filtering.h"
 
@@ -19,7 +18,7 @@ if ((err) != cudaSuccess) { \
 	return (err);           \
 }                           \
 
-namespace CG2 {
+namespace supreme {
 
 int resizeCudaBuffer(size_t size) {
 	cudaError_t err = cudaSuccess;
@@ -157,11 +156,11 @@ cudaError_t getDeviceInfo(const int deviceId, DeviceInfo & devInfo)
 	return res;
 }
 
-} //namespace CG2
+} //namespace supreme
 
 
 #else
-namespace CG2 {
+namespace supreme {
 
 int initCuda(uint32 glBuffer, DeviceInfo &devInfo) {
 	memset(&devInfo, 0, sizeof(DeviceInfo));

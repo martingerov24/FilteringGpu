@@ -7,7 +7,7 @@
 /// This optimizes CPU rendering with ~15%
 #define ENABLE_BUCKET_RENDERING
 
-namespace CG2 {
+namespace supreme {
 
 inline int clamp(int val, int minVal, int maxVal) { return std::min(std::max(val, minVal), maxVal); }
 
@@ -124,4 +124,4 @@ int filterWithCPU(uint32 *buffer, const Image& image, const float *kernel, int n
 #endif
 
 
-} //namespace CG2
+} //namespace supreme

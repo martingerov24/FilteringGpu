@@ -13,14 +13,14 @@
 
 typedef unsigned int uint32;
 
-namespace CG2 {
+namespace supreme {
 
 /// A simple struct we use to represent colors.
 /// Information for each color is stored within 3 floats
 /// If this code is compiled against a x64 architecture, this class
 /// can be enabled to utilize the processor SSE instruction set
 /// in order to perform SIMD operations on colors.
-struct Color {
+struct  Color {
 
 #ifdef USE_SSE
 	embree::ssef f;

@@ -1,6 +1,6 @@
 #include "Color.h"
 #include <algorithm>
-namespace CG2 {
+namespace supreme {
 
 inline float clamp(float val, float minVal, float maxVal) { return std::min(std::max(val, minVal), maxVal); }
 

@@ -3,9 +3,9 @@
 #include <string>
 #include "Color.h"
 
-typedef unsigned long long uint64;
+typedef unsigned long long uint64_t;
 
-namespace CG2 {
+namespace supreme {
 
 /// Class performing basic operations with images
 /// Allows loading and storing of images from and to disk,
@@ -32,7 +32,7 @@ public:
 	std::string getName() const;
 
 	/// Returns the memory used by the image in bytes.
-	uint64 getMemUsage() const;
+	uint64_t getMemUsage() const;
 
 	/// Loads an image from disk
 	/// @param fileName Location on disk to load the image from

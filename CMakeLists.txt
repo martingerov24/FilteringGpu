@@ -4,10 +4,6 @@ project (cg2_Demo LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if(NOT DEFINED ENV{CUDA_PATH})
-    message(FATAL_ERROR "-- CUDA_PATH is not set")
-endif()
-
 include(FetchContent)
 set(CONFIG_PATH ${CMAKE_SOURCE_DIR}/config)
 set(SDK_PATH ${CMAKE_SOURCE_DIR}/sdk)
@@ -27,12 +23,3 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
     Renderer
     ${CMAKE_DL_LIBS}
 )
-
-target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
-                       --generate-line-info
-                       --use_fast_math
-                       >)
-
-target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:MSVC>:
-                       --MTR_ENABLED
-                       >)

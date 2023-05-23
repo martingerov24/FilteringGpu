@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <vector>
 
-namespace CG2 {
+namespace supreme {
 
 static int neighbourhood = -1;
 

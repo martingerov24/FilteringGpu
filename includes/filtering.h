@@ -4,7 +4,7 @@
 
 #include <cstring>
 
-namespace CG2 {
+namespace supreme {
 
 	const int maxKernelNeighbourhood = 100;
 

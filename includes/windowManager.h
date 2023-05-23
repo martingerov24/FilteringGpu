@@ -2,15 +2,20 @@
 #pragma once
 #include <GLFW/glfw3.h>
 #include "parameters.h"
+
 class WindowManager {
     void bindTexture();
     void createContext();
-    void onNewFrame();
+    void onNewFrame() const;
 public:
     WindowManager() = default;
     bool init();
     bool shouldClose();
-    bool draw(const uint8_t* output, const ImageParams& params);
+    inline uint32_t getTextureId() const { return texture; }; 
+    bool draw(
+        const uint8_t* output, 
+        const ImageParams& params
+    ) const;
     void terminate();
 private:
     GLFWwindow* window = nullptr;

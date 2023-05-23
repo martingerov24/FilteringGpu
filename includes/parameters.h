@@ -22,5 +22,5 @@ struct ImageParams {
 	const int32_t width;
 	const int32_t stride;
     const int32_t bpp;
-	const int8_t channels = 4;
+	const int8_t channels = 3;
 };

@@ -2,7 +2,7 @@
 
 #include <image.h>
 
-namespace CG2 {
+namespace supreme {
 
 enum deviceType {
 	CPU = 0,
