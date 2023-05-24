@@ -18,13 +18,15 @@ void WindowManager::onNewFrame() const{
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+    bool is_show = true;
+    ImGui::Begin("Image", &is_show);
 }
 
-bool WindowManager::shouldClose() {
+bool WindowManager::shouldClose() const {
     return !glfwWindowShouldClose(window);
 }
 
-void WindowManager::changeState(supreme::deviceType& type) {
+void WindowManager::changeState(supreme::deviceType& type) const {
     if (ImGui::Button("Use CUDA")) {
         bool enumValue = static_cast<bool>(type);
         enumValue = !enumValue;
@@ -32,7 +34,7 @@ void WindowManager::changeState(supreme::deviceType& type) {
     }
 }
 
-void WindowManager::useFilter(bool& useFilter) {
+void WindowManager::useFilter(bool& useFilter) const {
     if (ImGui::Button("Use Filter")) {
         useFilter = !useFilter;
     }
@@ -79,20 +81,39 @@ void WindowManager::terminate() {
     glfwDestroyWindow(window);
 }
 
-bool WindowManager::draw(const uint8_t* output, const ImageParams& params, supreme::deviceType& type) {
-    if(output==nullptr) {
-        return false;
-    }
-    bool is_show = true;
-    onNewFrame();
-    ImGui::Begin("Image", &is_show);
-    changeState(type);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, params.width, params.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, output);
-    ImGui::Image(reinterpret_cast<void*>(static_cast<intptr_t>(texture)), ImVec2(800, 600));
+void WindowManager::createSlider(
+    const char* slider_name, 
+    float& value,
+    const float min, 
+    const float max
+) const {
+    ImGui::SliderFloat(slider_name, &value, min, max);
+}
+
+void WindowManager::createSlider(
+    const char* slider_name, 
+    int32_t& value,
+    const uint32_t min, 
+    const uint32_t max
+) const {
+    ImGui::SliderInt(slider_name, &value, min, max);
+}
+
+void WindowManager::swapBuffers() const {
     ImGui::End();
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     glfwSwapBuffers(window);
+}
+
+bool WindowManager::draw(const uint8_t* output, const ImageParams& params, supreme::deviceType& type) {
+    if(output==nullptr) {
+        return false;
+    }
+    if(type == supreme::deviceType::CPU) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, params.width, params.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, output);
+    }
+    ImGui::Image(reinterpret_cast<void*>(static_cast<intptr_t>(texture)), ImVec2(800, 600));
     return true;
 }

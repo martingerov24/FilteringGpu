@@ -13,7 +13,9 @@ void processAndDisplay(
 ) {
     supreme::DeviceInfo devInfo;
     supreme::deviceType devType = supreme::deviceType::CPU;
-    uint32_t nvhdFilter = 2;
+    int32_t nvhdFilter = 2;
+    float sharpen_blur = 0.0f;
+    bool use_filter = true;
 
     WindowManager window;
 	window.init();
@@ -25,10 +27,19 @@ void processAndDisplay(
     uint32_t* image_in_four_bytes = reinterpret_cast<uint32_t*>(byte_output_data);
     
 	while (window.shouldClose()) {
-        supreme::filterImage(devType, image_in_four_bytes, image, -1, nvhdFilter);
-		if(window.draw(byte_output_data, params, devType) == false) {
+        window.onNewFrame();
+        window.useFilter(use_filter);
+        window.changeState(devType);
+        if(use_filter) {
+            supreme::filterImage(devType, image_in_four_bytes, image, sharpen_blur, nvhdFilter);
+        }
+        window.createSlider("Neighbour Filter", nvhdFilter, 0, 100);
+		window.createSlider("Sharpen Filter", sharpen_blur, -1.0f, 1.0f);
+        if(window.draw(byte_output_data, params, devType) == false) {
 			break;
 		}
+        use_filter = false;
+        window.swapBuffers();
 	}
     supreme::deinitCuda();
 	window.terminate();

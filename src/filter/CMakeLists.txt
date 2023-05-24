@@ -1,10 +1,16 @@
 cmake_minimum_required(VERSION 3.20)
 set(CMAKE_CUDA_ARCHITECTURES 50)
-project(ImageFiltering LANGUAGES CXX CUDA)
+project(ImageFiltering LANGUAGES CXX)
 
 include(${CONFIG_PATH}/utils.cmake)
 
-find_package(CUDAToolkit REQUIRED)
+find_package(CUDAToolkit)
+
+if(CUDAToolkit_FOUND)
+    message("CUDA FOUND")
+    enable_language(CUDA)
+    set(USE_CUDA TRUE)
+endif()
 
 if(DEFINED ENV{GLEW})
     set(GLEW $ENV{GLEW})
@@ -32,7 +38,10 @@ set(DEVICE_SOURCES
 )
 
 set_source_files_properties(${HEADERS} ${SOURCES} PROPERTIES LANGUAGE CXX)
-set_source_files_properties(${DEVICE_SOURCES}     PROPERTIES LANGUAGE CUDA)
+
+if(USE_CUDA)
+    set_source_files_properties(${DEVICE_SOURCES}     PROPERTIES LANGUAGE CUDA)
+endif()
 
 add_library(${PROJECT_NAME} STATIC ${HEADERS} ${SOURCES} ${DEVICE_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -44,14 +53,16 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${SDK_PATH}
 )
 
-target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
-    --generate-line-info
-    --use_fast_math
-    >
-)
+if(USE_CUDA)
+    target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+        --generate-line-info
+        --use_fast_math
+        >
+    )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC
-    CUDA::cudart
-)
+    target_link_libraries(${PROJECT_NAME} PUBLIC
+        CUDA::cudart
+    )
+endif()
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${INSTALL_PATH})
