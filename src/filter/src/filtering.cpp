@@ -10,10 +10,15 @@ static int neighbourhood = -1;
 /// Initializes all 3 kernels with the given neighbourhood
 /// @param kernelNbhd The desired radius for the kernels
 void initFilters(int kernelNbhd) {
+	static int prevNbhd = -1;
+	if(prevNbhd == kernelNbhd) {
+		return;
+	}
 	initSmoothKernel(kernelNbhd);
 	initSharpKernel(kernelNbhd);
 	initIdentityKernel(kernelNbhd);
 	neighbourhood = kernelNbhd;
+	prevNbhd = kernelNbhd;
 }
 
 void newImageLoaded(const Image &img) {

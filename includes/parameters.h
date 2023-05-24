@@ -31,3 +31,27 @@ struct ImageParams {
     const int32_t bpp;
 	const int8_t channels = 3;
 };
+
+#define return_if_false(x) do { \
+    int retval = (x); \
+    if (retval != 0) { \
+        printf("Runtime error: %s returned %d at %s:%d\n", #x, retval, __FILE__, __LINE__); \
+        return retval; \
+    } \
+} while (0)
+
+#define break_if_false(x) do { \
+    int retval = (x); \
+    if (retval != 0) { \
+        printf("Runtime error: %s returned %d at %s:%d\n", #x, retval, __FILE__, __LINE__); \
+        break; \
+    } \
+} while (0)
+
+#define return_if_nullptr(x, msg) do { \
+    int retval = -1; \
+    if (x == nullptr) { \
+        printf("Runtime error:%s, %s returned %d at %s:%d\n", #msg, #x, retval, __FILE__, __LINE__); \
+        return retval; \
+    } \
+} while (0)

@@ -6,43 +6,45 @@
 #include "windowManager.h"
 #include "parameters.h"
 
-void processAndDisplay(
+int32_t processAndDisplay(
     const supreme::Image& image, 
     const ImageParams& params,
     uint8_t* byte_output_data
 ) {
     supreme::DeviceInfo devInfo;
-    supreme::deviceType devType = supreme::deviceType::CPU;
+    supreme::deviceType devType = supreme::deviceType::CUDA;
     int32_t nvhdFilter = 2;
-    float sharpen_blur = 0.0f;
+    float sharpen_blur = -1.0f;
     bool use_filter = true;
 
     WindowManager window;
-	window.init();
-    uint32_t glBuffer = window.getTextureId();
-    supreme::initCuda(glBuffer, devInfo);
-	supreme::newImageLoaded(image);
-    supreme::uploadCudaBuffer(image.getData(), image.getMemUsage());
-
-    uint32_t* image_in_four_bytes = reinterpret_cast<uint32_t*>(byte_output_data);
+	window.init(params);
     
+    uint32_t glBuffer = window.getTextureId();
+    return_if_false(supreme::initCuda(glBuffer, devInfo));
+
+	supreme::newImageLoaded(image);
+    return_if_false(supreme::uploadCudaBuffer(image.getData(), image.getMemUsage()));
+    
+    uint32_t* image_in_four_bytes = reinterpret_cast<uint32_t*>(byte_output_data);
+
 	while (window.shouldClose()) {
         window.onNewFrame();
         window.useFilter(use_filter);
         window.changeState(devType);
-        if(use_filter) {
-            supreme::filterImage(devType, image_in_four_bytes, image, sharpen_blur, nvhdFilter);
-        }
         window.createSlider("Neighbour Filter", nvhdFilter, 0, 100);
 		window.createSlider("Sharpen Filter", sharpen_blur, -1.0f, 1.0f);
-        if(window.draw(byte_output_data, params, devType) == false) {
-			break;
-		}
+        supreme::initFilters(nvhdFilter);
+        if(use_filter || devType == supreme::deviceType::CUDA) {
+            break_if_false(supreme::filterImage(devType, image_in_four_bytes, image, sharpen_blur, nvhdFilter));
+        }
+        break_if_false(window.draw(byte_output_data, params, devType));
         use_filter = false;
         window.swapBuffers();
 	}
     supreme::deinitCuda();
 	window.terminate();
+    return 0;
 }
 
 int main() {

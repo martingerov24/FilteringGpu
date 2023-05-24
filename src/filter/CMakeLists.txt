@@ -10,6 +10,7 @@ if(CUDAToolkit_FOUND)
     message("CUDA FOUND")
     enable_language(CUDA)
     set(USE_CUDA TRUE)
+    add_compile_definitions(ALLOW_CUDA)
 endif()
 
 if(DEFINED ENV{GLEW})

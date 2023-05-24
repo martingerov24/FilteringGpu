@@ -2,14 +2,14 @@
 #pragma once
 #include <GLFW/glfw3.h>
 #include "parameters.h"
+#include <vector>
 
 class WindowManager {
-    void bindTexture();
     void createContext();
 public:
     WindowManager() = default;
     //init OpenGl, create textures to render on.
-    bool init();
+    bool init(const ImageParams& params);
     //used in main loop, so it can be closed on X button.
     bool shouldClose() const;
     //draws everything on the screen and swaps with the next window buffer.
@@ -41,7 +41,7 @@ public:
     //draws the class member texture
     //if GPU, we expext the code to save with cuda_interop, so buffer transfer from CPU->texture
     //won't be done on the draw function. 
-    bool draw(
+    int draw(
         const uint8_t* output, 
         const ImageParams& params,
         supreme::deviceType& type
@@ -53,3 +53,6 @@ private:
     GLuint texture = -1;
 };
 
+void bindTexture(uint32_t texture);
+void unbindTexture();
+const std::vector<uint8_t>& getTextureData(const ImageParams& params, const uint32_t texture);
