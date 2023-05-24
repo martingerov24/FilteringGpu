@@ -15,7 +15,10 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_CRT_SECURE_NO_WARNINGS=1 -D_UNICODE 
 add_subdirectory (src/filter)
 add_subdirectory (src/renderer)
 
-set(SOURCES src/main.cpp)
+set(SOURCES
+    src/parameters.cpp
+    src/main.cpp
+)
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_link_libraries(${PROJECT_NAME} PUBLIC

@@ -2,6 +2,13 @@
 #include <cinttypes>
 #include <cstddef>
 
+namespace supreme{
+	enum deviceType : bool {
+		CPU = 0,
+		CUDA = 1,
+	};
+}
+
 struct ImageParams {
 	ImageParams(
 		const int32_t _height,

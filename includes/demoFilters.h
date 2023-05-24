@@ -1,13 +1,9 @@
 #pragma once
 
 #include <image.h>
+#include "parameters.h"
 
 namespace supreme {
-
-enum deviceType {
-	CPU = 0,
-	CUDA = 1,
-};
 
 /// A containter for CUDA device information
 struct DeviceInfo{
@@ -64,6 +60,6 @@ int remapCudaBuffer(uint32 glBuffer);
 /// Transfers host buffer to CUDA
 /// @param hostBuffer A buffer of host memory
 /// @param size The size of the buffer in terms of bytes.
-int uploadCudaBuffer(void* hostBuffer, size_t size);
+int uploadCudaBuffer(const void* hostBuffer, size_t size);
 
 }

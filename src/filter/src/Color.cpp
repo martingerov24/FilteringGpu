@@ -143,7 +143,6 @@ Color Color::operator - () const {
 
 #endif
 
-
 uint32 Color::toUINT32() const {
 	return
 		((uint32)(0            /* alpha */         ) << 24) |

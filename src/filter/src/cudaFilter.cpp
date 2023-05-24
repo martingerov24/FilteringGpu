@@ -32,7 +32,7 @@ int resizeCudaBuffer(size_t size) {
 	return err;
 }
 
-int uploadCudaBuffer(void* buffer, size_t size) {
+int uploadCudaBuffer(const void* buffer, size_t size) {
 	cudaError_t err = cudaSuccess;
 	err = cudaMemcpy(imgBuf, buffer, size, cudaMemcpyHostToDevice);
 	checkError(err);
@@ -68,7 +68,6 @@ int initCuda(uint32 glBuffer, DeviceInfo &devInfo) {
 
 	err = getDeviceInfo(0, devInfo);
 	checkError(err);
-
 
 	const size_t kernelBufferSize = SQR(KERNEL_SIZE(maxKernelNeighbourhood))*sizeof(float);
 	err = cudaMalloc(&kernelBuf, kernelBufferSize);
@@ -169,7 +168,7 @@ int initCuda(uint32 glBuffer, DeviceInfo &devInfo) {
 int deinitCuda() { return -1; }
 int resizeCudaBuffer(size_t size) { return -1; }
 int remapCudaBuffer(uint32 glBuffer) { return -1; }
-int uploadCudaBuffer(void* buffer, size_t size) { return -1; };
+int uploadCudaBuffer(const void* buffer, size_t size) { return -1; };
 int filterWithCUDA(int imgWidth, int imgHeight, const float *kernel, int nbhd) { return -1; }
 
 }

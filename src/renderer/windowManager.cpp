@@ -24,6 +24,20 @@ bool WindowManager::shouldClose() {
     return !glfwWindowShouldClose(window);
 }
 
+void WindowManager::changeState(supreme::deviceType& type) {
+    if (ImGui::Button("Use CUDA")) {
+        bool enumValue = static_cast<bool>(type);
+        enumValue = !enumValue;
+        type = static_cast<supreme::deviceType>(enumValue);
+    }
+}
+
+void WindowManager::useFilter(bool& useFilter) {
+    if (ImGui::Button("Use Filter")) {
+        useFilter = !useFilter;
+    }
+}
+
 void WindowManager::createContext() {
     glfwMakeContextCurrent(window);
     glfwSwapInterval(0);
@@ -65,13 +79,14 @@ void WindowManager::terminate() {
     glfwDestroyWindow(window);
 }
 
-bool WindowManager::draw(const uint8_t* output, const ImageParams& params) const {
+bool WindowManager::draw(const uint8_t* output, const ImageParams& params, supreme::deviceType& type) {
     if(output==nullptr) {
         return false;
     }
     bool is_show = true;
     onNewFrame();
     ImGui::Begin("Image", &is_show);
+    changeState(type);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, params.width, params.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, output);
     ImGui::Image(reinterpret_cast<void*>(static_cast<intptr_t>(texture)), ImVec2(800, 600));
     ImGui::End();

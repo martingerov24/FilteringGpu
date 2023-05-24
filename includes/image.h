@@ -2,8 +2,7 @@
 
 #include <string>
 #include "Color.h"
-
-typedef unsigned long long uint64_t;
+#include <vector>
 
 namespace supreme {
 
@@ -16,20 +15,20 @@ public:
 	///Structors...
 	Image();
 	~Image();
-	Image(const int width,const int height, const std::string &fileName = std::string("Unnamed"));
-	Image(const int width,const int height, Color* buffer, const std::string &fileName = std::string("Unnamed"));
 	Image(const Image& rhs);
 	Image(const std::string & fileName);
 	Image & operator=(const Image& rhs);
 
-	Color* getData() const;
-	Color* getLine(const int idx) const;
-	Color  getPixel(const int w, const int h) const;
-	Color  getPixel(const float u, const float v) const;
-	int    getWidth() const;
-	int    getHeight() const;
-	int	   getChannels() const;
-	std::string getName() const;
+	const Color*   getData() const;
+	const Color*   getLine(const int idx) const;
+	Color    	   getPixel(const int w, const int h) const;
+	Color    	   getPixel(const float u, const float v) const;
+	int      	   getWidth() const;
+	int      	   getHeight() const;
+	int	     	   getChannels() const;
+	std::string    getName() const;
+
+	std::vector<uint32_t> getDataInInt() const;
 
 	/// Returns the memory used by the image in bytes.
 	uint64_t getMemUsage() const;
@@ -40,7 +39,7 @@ public:
 
 	/// Saves this image to disk
 	/// @param fileName Where to store the image
-	int save(const std::string & fileName) const;
+	int save_jpg(const std::string & fileName) const;
 
 	/// Allocates memory to store an image of size width x height
 	int allocate(const int width, const int height);
@@ -60,12 +59,12 @@ private:
 	/// Helper function that loads an image from file given
 	int loadFromFile(const std::string & fileName);
 	
-	Color *data;      ///< Pointer to the colors buffer
-	std::string name; ///< Name of the image. If loaded from file this is the name of the file. Defaults to "unnamed"
-	int width;        ///< Width of the image loaded
-	int height;       ///< Height of the image loaded
-	int channels;	  ///< Channels of the image loaded
-	bool valid;       ///< True if image was loaded successfully
+	std::vector<Color> data;    ///< Pointer to the colors buffer
+	std::string name; 			///< Name of the image. If loaded from file this is the name of the file. Defaults to "unnamed"
+	int width;        			///< Width of the image loaded
+	int height;       			///< Height of the image loaded
+	int channels;	  			///< Channels of the image loaded
+	bool valid;       			///< True if image was loaded successfully
 };
 
 }
