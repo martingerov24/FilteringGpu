@@ -76,6 +76,9 @@ int initCuda(uint32 glBuffer, DeviceInfo &devInfo) {
 	err = cudaGraphicsGLRegisterBuffer(&resource, glBuffer, cudaGraphicsMapFlagsWriteDiscard);
 	checkError(err);
 
+	err = cudaDeviceSynchronize();
+	checkError(err);
+	
 	return err;
 }
 

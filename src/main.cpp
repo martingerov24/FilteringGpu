@@ -18,12 +18,12 @@ int32_t processAndDisplay(
     bool use_filter = true;
 
     WindowManager window;
-	window.init(params);
-    
-    uint32_t glBuffer = window.getTextureId();
-    return_if_false(supreme::initCuda(glBuffer, devInfo));
+	window.init(params, BufferType::BUFFER);
+    uint32_t glBuffer = window.getBufferId();
 
-	supreme::newImageLoaded(image);
+    return_if_false(supreme::initCuda(glBuffer, devInfo));
+	return_if_false(supreme::newImageLoaded(image));
+    return_if_false(supreme::resizeCudaBuffer(image.getMemUsage()));
     return_if_false(supreme::uploadCudaBuffer(image.getData(), image.getMemUsage()));
     
     uint32_t* image_in_four_bytes = reinterpret_cast<uint32_t*>(byte_output_data);
@@ -38,17 +38,18 @@ int32_t processAndDisplay(
         if(use_filter || devType == supreme::deviceType::CUDA) {
             break_if_false(supreme::filterImage(devType, image_in_four_bytes, image, sharpen_blur, nvhdFilter));
         }
+        const std::vector<uint8_t>& output = debug::getTextureData(params, BufferType::BUFFER, window.getBufferId(), window.getTextureId()); 
         break_if_false(window.draw(byte_output_data, params, devType));
         use_filter = false;
         window.swapBuffers();
 	}
-    supreme::deinitCuda();
+    return_if_false(supreme::deinitCuda());
 	window.terminate();
     return 0;
 }
 
 int main() {
-    supreme::Image image("/home/mgerov/code/fmi/cg2/peacock-feather-1638181.jpg");
+    supreme::Image image("/home/mgerov/code/fmi/cg2/peacock.png");
     if(image.isValid() == false){
         return -1;
     }

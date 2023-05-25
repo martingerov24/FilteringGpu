@@ -31,7 +31,7 @@ void initFilters(int kernelNbhd);
 /// The buckets are used by the CPU renderer for more cache friendly memory accesses during convolution
 /// @param img A reference to the new image
 /// @param kernelNbhd The currently set kernel radius
-void newImageLoaded(const Image &img);
+int newImageLoaded(const Image &img);
 
 /// Called to perform the actual filtering
 /// @param device The device we are currently filtering on. CPU or GPU

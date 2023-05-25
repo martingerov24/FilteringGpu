@@ -1,15 +1,22 @@
 
 #pragma once
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "parameters.h"
 #include <vector>
+
+enum class BufferType : uint8_t {
+    TEXTURE, 
+    BUFFER,
+    NONE
+};
 
 class WindowManager {
     void createContext();
 public:
     WindowManager() = default;
     //init OpenGl, create textures to render on.
-    bool init(const ImageParams& params);
+    bool init(const ImageParams& params, const BufferType type);
     //used in main loop, so it can be closed on X button.
     bool shouldClose() const;
     //draws everything on the screen and swaps with the next window buffer.
@@ -37,7 +44,8 @@ public:
     //whether to use CPU or GPU.
     void changeState(supreme::deviceType& type) const;
     //get the id of member texture.
-    inline uint32_t getTextureId() const { return texture; };
+    uint32_t getBufferId() const { return m_bufferType == BufferType::BUFFER ? m_buffer : -1; }
+    uint32_t getTextureId() const { return m_texture; }
     //draws the class member texture
     //if GPU, we expext the code to save with cuda_interop, so buffer transfer from CPU->texture
     //won't be done on the draw function. 
@@ -50,9 +58,11 @@ public:
     void terminate();
 private:
     GLFWwindow* window = nullptr;
-    GLuint texture = -1;
+    GLuint m_texture = -1;
+    GLuint m_buffer = -1;
+    BufferType m_bufferType = BufferType::NONE; 
 };
 
-void bindTexture(uint32_t texture);
-void unbindTexture();
-const std::vector<uint8_t>& getTextureData(const ImageParams& params, const uint32_t texture);
+namespace debug {
+    const std::vector<uint8_t>& getTextureData(const ImageParams& params, const BufferType type, const uint32_t buffer, const uint32_t texture);
+}

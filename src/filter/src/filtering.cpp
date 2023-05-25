@@ -21,8 +21,9 @@ void initFilters(int kernelNbhd) {
 	prevNbhd = kernelNbhd;
 }
 
-void newImageLoaded(const Image &img) {
+int newImageLoaded(const Image &img) {
 	initBuckets(img);
+	return 0;
 }
 
 int filterImage(deviceType device, uint32 *buffer, const Image& img, float mixVal, int nbhd) {
