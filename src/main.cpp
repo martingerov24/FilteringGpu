@@ -57,7 +57,7 @@ int32_t processAndDisplay(
 }
 
 int main() {
-    supreme::Image image("/home/mgerov/code/fmi/cg2/peacock.png");
+    supreme::Image image("/home/mgerov/code/fmi/cg2/peacock-feather-1638181.jpg");
     if(image.isValid() == false){
         return -1;
     }

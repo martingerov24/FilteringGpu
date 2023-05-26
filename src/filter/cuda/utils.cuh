@@ -76,7 +76,21 @@ __device__ inline int getidx(int x, int y, int nbhd, int width, int height) {
 	return h*width + w;
 }
 
-__device__ uint32 convolveShared(const uint32* srcBuff, int imgWidth, int imgHeight, const float *convKernel, int nbhd) {
+__device__ float4 convolve(int i, int j, const float *kernel, int k, uint32* img, int imgWidth, int imgHeight) {
+	float4 res = make_float4(0.f, 0.f, 0.f, 1.f);
+
+	for (int u = -k; u <= k; u++) {
+		for (int v = -k; v <= k; v++) {
+			const int ix = clamp(i - u, 0, imgWidth -1);
+			const int iy = clamp(j - v, 0, imgHeight - 1);
+			const float4 col = toFloat4(img[imgWidth * iy + ix]);
+			res +=  col * kernel[(u+k)*(2*k+1) + (v+k)];
+		}
+	}
+	return res;
+}
+
+__device__ float4 convolveShared(const uint32* srcBuff, int imgWidth, int imgHeight, const float *convKernel, int nbhd) {
 
 	__shared__ uint32 data[TILE_DIM + MAX_KERNEL_RADIUS*2][TILE_DIM + MAX_KERNEL_RADIUS*2];
 
@@ -126,20 +140,26 @@ __device__ uint32 convolveShared(const uint32* srcBuff, int imgWidth, int imgHei
 	// Wait for all threads to finish populating shared memory before going on.
 	__syncthreads();
 
-	// global mem address of this thread
-	// This is where we will write the final result in global memory
-	const int x = threadIdx.x + nbhd;
-	const int y = threadIdx.y + nbhd;
+	
+	const int ix = blockIdx.x * blockDim.x + threadIdx.x;
+	const int iy = blockIdx.y * blockDim.y + threadIdx.y;
 
-	// Perform standard convolution reading the image pixels from the shared memory block
-	float4 sum = make_float4(0.f, 0.f, 0.f, 1.f);
-	for (int i = -nbhd; i <= nbhd; i++) {
-		for (int j = -nbhd; j <= nbhd; j++) {
-			const float4 col = toFloat4(data[y + i][x + j]);
-			sum += col * convKernel[(i+nbhd)*(2*nbhd+1) + (j+nbhd)];
+	// From now on we only need threads within the frame of the image
+	if (ix < imgWidth && iy < imgHeight) {
+		// global mem address of this thread
+		// This is where we will write the final result in global memory
+		const int x = threadIdx.x + nbhd;
+		const int y = threadIdx.y + nbhd;
+
+		// Perform standard convolution reading the image pixels from the shared memory block
+		float4 sum = make_float4(0.f, 0.f, 0.f, 1.f);
+		for (int i = -nbhd; i <= nbhd; i++) {
+			for (int j = -nbhd; j <= nbhd; j++) {
+				const float4 col = toFloat4(data[y + i][x + j]);
+				sum += col * convKernel[(i+nbhd)*(2*nbhd+1) + (j+nbhd)];
+			}
 		}
+		return sum;
 	}
-	sum = clamp(sum, 0.f, 1.f);
-	return toInt(sum);
 }
 #endif //__CUDACC__
