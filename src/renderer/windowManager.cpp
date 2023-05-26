@@ -3,6 +3,7 @@
 #include "imgui/backends/imgui_impl_glfw.h"
 #include "imgui/backends/imgui_impl_opengl3.h"
 #include "stbi_image_write.h"
+#include "ImGuiFileDialog.h"
 #include <cstdio>
 #include <assert.h>
 
@@ -112,7 +113,7 @@ void WindowManager::createContext() {
     ImGui_ImplOpenGL3_Init("#version 330");
 }
 
-bool WindowManager::init(const ImageParams& params) {
+bool WindowManager::init() {
     GLCall(glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE));
     GLCall(glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3));
     GLCall(glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3));
@@ -127,6 +128,10 @@ bool WindowManager::init(const ImageParams& params) {
     }
 	createContext();
 
+    return window;
+}
+
+void WindowManager::genTextures(const ImageParams& params) {
 	GLCall(glGenTextures(1, &m_texture_cuda));
     GLCall(bindTexture(m_texture_cuda));
     GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, params.width, params.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
@@ -134,8 +139,23 @@ bool WindowManager::init(const ImageParams& params) {
     GLCall(glGenTextures(1, &m_texture_cpu));
     GLCall(bindTexture(m_texture_cpu));
     GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, params.width, params.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
-    return window;
 }
+
+std::string WindowManager::openFile() {
+    std::string filePath;
+    if (ImGui::Button("Open File Dialog"))
+        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".png,.jpg", ".");
+
+    // display
+    if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
+        if (ImGuiFileDialog::Instance()->IsOk()) {
+            std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+            filePath = filePathName;
+        }
+        ImGuiFileDialog::Instance()->Close();
+    }
+    return filePath;
+}   
 
 void WindowManager::terminate() {
     ImGui_ImplGlfw_Shutdown();

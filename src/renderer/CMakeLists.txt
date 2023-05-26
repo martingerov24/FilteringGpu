@@ -10,23 +10,24 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 clone(glfw https://github.com/glfw/glfw.git 3.3.2)
 clone(glad https://github.com/Dav1dde/glad.git df8e9e16110b305479a875399cee13daa0ccadd9)
-
 #----------imgui Dependencies----------
 checkPath(${SDK_PATH}/imgui)
 set(IMGUI_DIR ${SDK_PATH}/imgui)
 set(IMGUI_SOURCES
-    "${IMGUI_DIR}/imgui_demo.cpp"
-    "${IMGUI_DIR}/imgui_draw.cpp"
-    "${IMGUI_DIR}/backends/imgui_impl_glfw.cpp"
-    "${IMGUI_DIR}/backends/imgui_impl_glfw.h"
-    "${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp"
-    "${IMGUI_DIR}/backends/imgui_impl_opengl3.h"
-    "${IMGUI_DIR}/imgui_tables.cpp"
-    "${IMGUI_DIR}/imgui_widgets.cpp"
-    "${IMGUI_DIR}/imgui.cpp"
+"${IMGUI_DIR}/imgui_demo.cpp"
+"${IMGUI_DIR}/imgui_draw.cpp"
+"${IMGUI_DIR}/backends/imgui_impl_glfw.cpp"
+"${IMGUI_DIR}/backends/imgui_impl_glfw.h"
+"${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp"
+"${IMGUI_DIR}/backends/imgui_impl_opengl3.h"
+"${IMGUI_DIR}/imgui_tables.cpp"
+"${IMGUI_DIR}/imgui_widgets.cpp"
+"${IMGUI_DIR}/imgui.cpp"
+"${SDK_PATH}/ImGuiFileDialog/ImGuiFileDialog.cpp"
 )
 
 set(IMGUI_INCLUDES 
+    ${SDK_PATH}/ImGuiFileDialog
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends 
 )

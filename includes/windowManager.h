@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 #include "parameters.h"
 #include <vector>
+#include <string>
 
 enum class BufferType : uint8_t {
     TEXTURE, 
@@ -15,8 +16,8 @@ class WindowManager {
     void createContext();
 public:
     WindowManager() = default;
-    //init OpenGl, create textures to render on.
-    bool init(const ImageParams& params);
+    //init OpenGl, 
+    bool init();
     //used in main loop, so it can be closed on X button.
     bool shouldClose() const;
     //draws everything on the screen and swaps with the next window buffer.
@@ -39,6 +40,10 @@ public:
         const uint32_t min, 
         const uint32_t max
     ) const;
+    //create textures to render on.
+    void genTextures(const ImageParams& params);
+    //choose an image to open
+    std::string openFile();
     void saveImage(const uint8_t* data, const int width, const int height)const;
     //changes the state of @useFilter on button click
     void useFilter(bool& useFilter) const;
