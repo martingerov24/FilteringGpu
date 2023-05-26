@@ -10,7 +10,7 @@ enum class BufferType : uint8_t {
     BUFFER,
     NONE
 };
-
+typedef void* ImTextureID;
 class WindowManager {
     void createContext();
 public:
@@ -57,6 +57,7 @@ public:
     void terminate();
 private:
     GLFWwindow* window = nullptr;
+    ImTextureID render_primitive;
     GLuint m_texture = -1;
 };
 

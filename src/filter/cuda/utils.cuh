@@ -1,10 +1,8 @@
 #pragma once
 
 #include <cuda_runtime.h>
-
 /// Entry point of our cuda program.
 extern "C" void runCudaKernel(cudaSurfaceObject_t glBuffer, void* deviceBuffer, int width, int height, void *convKernel, int nbhd);
-
 
 #if defined __CUDACC__
 const int TILE_DIM = 32;
@@ -65,33 +63,6 @@ __host__ __device__ inline int divUp(int a, int b) {
 
 #endif //__CUDACC__
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #if defined __CUDACC__
 /// Magic number 110 is not that magic. We have 48KB of shared memory
 /// In this size we can fit uint32 buffer of 12288
@@ -105,7 +76,7 @@ __device__ inline int getidx(int x, int y, int nbhd, int width, int height) {
 	return h*width + w;
 }
 
-__device__ void convolveShared(cudaSurfaceObject_t surface, const uint32* srcBuff, int imgWidth, int imgHeight, const float *convKernel, int nbhd) {
+__device__ uint32 convolveShared(const uint32* srcBuff, int imgWidth, int imgHeight, const float *convKernel, int nbhd) {
 
 	__shared__ uint32 data[TILE_DIM + MAX_KERNEL_RADIUS*2][TILE_DIM + MAX_KERNEL_RADIUS*2];
 
@@ -155,27 +126,20 @@ __device__ void convolveShared(cudaSurfaceObject_t surface, const uint32* srcBuf
 	// Wait for all threads to finish populating shared memory before going on.
 	__syncthreads();
 
-	const int ix = blockIdx.x * blockDim.x + threadIdx.x;
-	const int iy = blockIdx.y * blockDim.y + threadIdx.y;
+	// global mem address of this thread
+	// This is where we will write the final result in global memory
+	const int x = threadIdx.x + nbhd;
+	const int y = threadIdx.y + nbhd;
 
-	// From now on we only need threads within the frame of the image
-	if (ix < imgWidth && iy < imgHeight) {
-		// global mem address of this thread
-		// This is where we will write the final result in global memory
-		const int x = threadIdx.x + nbhd;
-		const int y = threadIdx.y + nbhd;
-
-		// Perform standard convolution reading the image pixels from the shared memory block
-		float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
-		for (int i = -nbhd; i <= nbhd; i++) {
-			for (int j = -nbhd; j <= nbhd; j++) {
-				const float4 col = toFloat4(data[y + i][x + j]);
-				sum += col * convKernel[(i+nbhd)*(2*nbhd+1) + (j+nbhd)];
-			}
+	// Perform standard convolution reading the image pixels from the shared memory block
+	float4 sum = make_float4(0.f, 0.f, 0.f, 1.f);
+	for (int i = -nbhd; i <= nbhd; i++) {
+		for (int j = -nbhd; j <= nbhd; j++) {
+			const float4 col = toFloat4(data[y + i][x + j]);
+			sum += col * convKernel[(i+nbhd)*(2*nbhd+1) + (j+nbhd)];
 		}
-		sum = clamp(sum, 0.f, 1.f);
-		uint32 resultInInt = toInt(sum);
-		surf2Dwrite(resultInInt, surface, ix * sizeof(uint32), iy, cudaBoundaryModeTrap);
 	}
+	sum = clamp(sum, 0.f, 1.f);
+	return toInt(sum);
 }
 #endif //__CUDACC__

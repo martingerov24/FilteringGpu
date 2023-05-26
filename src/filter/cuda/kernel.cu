@@ -1,6 +1,6 @@
 #include "cuda_runtime.h"
 #include "utils.cuh"
-
+#include "stdio.h"
 __device__ float4 convolve(int i, int j, const float *kernel, int k, const uint32* img, int imgWidth, int imgHeight) {
 	float4 res = make_float4(0.f, 0.f, 0.f, 1.f);
 
@@ -20,20 +20,25 @@ __global__ void convolutionKernel(cudaSurfaceObject_t surface, const uint32* src
 	const int ix = blockIdx.x * blockDim.x + threadIdx.x;
 	const int iy = blockIdx.y * blockDim.y + threadIdx.y;
 
-	// global mem address of this thread
-	const int globalID = iy * imgWidth + ix;
-
-	if (nbhd > MAX_KERNEL_RADIUS) {
-		if (ix < imgWidth && iy < imgHeight) {
-			float4 col = convolve(ix, iy, convKernel, nbhd, srcBuff, imgWidth, imgHeight);
-			col = clamp(col, 0.f, 1.f);
-
-			uint32 data = toInt(col);
-    		surf2Dwrite(data, surface, ix * sizeof(uint32), iy, cudaBoundaryModeTrap);
-		}
-	} else {
-		convolveShared(surface, srcBuff, imgWidth, imgHeight, convKernel, nbhd);
+	if (ix > imgWidth || iy > imgHeight) {
+		return;
 	}
+	uint32 result = 0;
+	if (nbhd > MAX_KERNEL_RADIUS) {
+		float4 col = convolve(ix, iy, convKernel, nbhd, srcBuff, imgWidth, imgHeight);
+		col = clamp(col, 0.f, 1.f);
+		result = toInt(col);
+	} else {
+		result = convolveShared(srcBuff, imgWidth, imgHeight, convKernel, nbhd);
+	}
+	if(ix == 1 && iy == 1) {
+		uint32 red   = (result >> 24) & 0xFF;
+		uint32 green = (result >> 16) & 0xFF;
+		uint32 blue  = (result >> 8) & 0xFF;
+		uint32 alpha =  result & 0xFF;
+		printf("red = %u, green = %u, blue = %u, alpha = %u, \n", red, green, blue, alpha);
+	}
+	surf2Dwrite(result, surface, ix * sizeof(uint32), iy, cudaBoundaryModeClamp);
 }
 
 extern "C"

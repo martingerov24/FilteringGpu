@@ -122,6 +122,7 @@ bool WindowManager::init(const ImageParams& params) {
 	GLCall(glGenTextures(1, &m_texture));
     GLCall(bindTexture(m_texture));
     GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, params.width, params.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
+    render_primitive = (ImTextureID)(intptr_t)m_texture;
     return window;
 }
 
@@ -168,9 +169,9 @@ int WindowManager::draw(const uint8_t* output, const ImageParams& params, suprem
     }
     bindTexture(m_texture);
     if(type == supreme::deviceType::CPU) {
-        GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, params.width, params.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, output));
+        GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, params.width, params.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, output));
     }
-    ImGui::Image(&m_texture, ImVec2(800, 600));
+    ImGui::Image(render_primitive, ImVec2(params.width, params.height));
     return 0;
 }
 

@@ -20,7 +20,7 @@ int32_t processAndDisplay(
 ) {
     supreme::DeviceInfo devInfo;
     supreme::deviceType devType = supreme::deviceType::CUDA;
-    int32_t nvhdFilter = 2;
+    int32_t nvhdFilter = 39;
     float sharpen_blur = -1.0f;
     bool use_filter = true;
 
@@ -46,7 +46,7 @@ int32_t processAndDisplay(
         if(use_filter || devType == supreme::deviceType::CUDA) {
             break_if_false(supreme::filterImage(devType, image_in_four_bytes, image, sharpen_blur, nvhdFilter));
         }
-        // debug::saveImage(debug::getTextureData(params,  window.getTextureId()), params.width, params.height);
+        debug::saveImage(debug::getTextureData(params,  window.getTextureId()), params.width, params.height);
         break_if_false(window.draw(byte_output_data, params, devType));
         use_filter = false;
         window.swapBuffers();
