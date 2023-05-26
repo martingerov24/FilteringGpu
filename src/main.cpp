@@ -5,6 +5,13 @@
 #include "demoFilters.h"
 #include "windowManager.h"
 #include "parameters.h"
+#include "stbi_image_write.h"
+
+namespace debug {
+    int saveImage(const std::vector<uint8_t>& output, const int width, const int height){
+    	return stbi_write_jpg("debug_save.jpg", width, height, 4, output.data(), 85);
+    }
+}
 
 int32_t processAndDisplay(
     const supreme::Image& image, 
@@ -18,13 +25,14 @@ int32_t processAndDisplay(
     bool use_filter = true;
 
     WindowManager window;
-	window.init(params, BufferType::BUFFER);
-    uint32_t glBuffer = window.getBufferId();
-
+	window.init(params);
+    uint32_t glBuffer = window.getTextureId();
+    
+    std::vector<uint32_t> cudaImg = image.getDataInInt();
     return_if_false(supreme::initCuda(glBuffer, devInfo));
 	return_if_false(supreme::newImageLoaded(image));
-    return_if_false(supreme::resizeCudaBuffer(image.getMemUsage()));
-    return_if_false(supreme::uploadCudaBuffer(image.getData(), image.getMemUsage()));
+    return_if_false(supreme::resizeCudaBuffer(cudaImg.size() * sizeof(cudaImg[0])));
+    return_if_false(supreme::uploadCudaBuffer(cudaImg.data(), cudaImg.size() * sizeof(cudaImg[0])));
     
     uint32_t* image_in_four_bytes = reinterpret_cast<uint32_t*>(byte_output_data);
 
@@ -38,7 +46,7 @@ int32_t processAndDisplay(
         if(use_filter || devType == supreme::deviceType::CUDA) {
             break_if_false(supreme::filterImage(devType, image_in_four_bytes, image, sharpen_blur, nvhdFilter));
         }
-        const std::vector<uint8_t>& output = debug::getTextureData(params, BufferType::BUFFER, window.getBufferId(), window.getTextureId()); 
+        // debug::saveImage(debug::getTextureData(params,  window.getTextureId()), params.width, params.height);
         break_if_false(window.draw(byte_output_data, params, devType));
         use_filter = false;
         window.swapBuffers();

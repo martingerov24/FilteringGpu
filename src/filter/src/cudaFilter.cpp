@@ -11,6 +11,7 @@
 void *imgBuf = NULL; ///< Stores the device pointer returned after image allocation on the CUDA device
 void *kernelBuf = NULL; ///< Stores the device pointer returned after allocating the convolution kernel on the CUDA device
 cudaGraphicsResource_t resource; ///< handles OpenGL-CUDA exchange
+cudaSurfaceObject_t writeSurface;
 
 #define checkError(err) \
 if ((err) != cudaSuccess) { \
@@ -19,6 +20,41 @@ if ((err) != cudaSuccess) { \
 }                           \
 
 namespace supreme {
+
+
+cudaError_t createSurfaceObject() {
+	cudaResourceDesc wdsc;
+	cudaArray* writeArray;
+	if (resource == nullptr) {
+		printf("texturePointer == nullptr at %s[%d] in function %s\n", __FILE__, __LINE__, __FUNCTION__);
+		return cudaErrorUnknown;
+	}
+
+	cudaError_t cudaStatus = cudaGraphicsMapResources(1, &resource);
+	checkError(cudaStatus);
+	cudaStatus = cudaGraphicsSubResourceGetMappedArray(&writeArray, resource, 0, 0);
+	checkError(cudaStatus);
+	wdsc.resType = cudaResourceTypeArray;
+	wdsc.res.array.array = writeArray;
+
+	cudaStatus = cudaCreateSurfaceObject(&writeSurface, &wdsc);
+	checkError(cudaStatus);
+
+	cudaStatus = cudaGraphicsUnmapResources(1, &resource);
+	checkError(cudaStatus);
+	return cudaStatus;
+}
+
+cudaError_t registerImage(uint32_t texture) {
+    cudaError_t cudaStatus = cudaGraphicsGLRegisterImage(
+        &resource,
+        texture,
+        GL_TEXTURE_2D,
+        cudaGraphicsRegisterFlagsNone
+    );
+    checkError(cudaStatus);
+    return cudaStatus;
+}
 
 int resizeCudaBuffer(size_t size) {
 	cudaError_t err = cudaSuccess;
@@ -73,8 +109,9 @@ int initCuda(uint32 glBuffer, DeviceInfo &devInfo) {
 	err = cudaMalloc(&kernelBuf, kernelBufferSize);
 	checkError(err);
 
-	err = cudaGraphicsGLRegisterBuffer(&resource, glBuffer, cudaGraphicsMapFlagsWriteDiscard);
-	checkError(err);
+	checkError(registerImage(glBuffer));
+
+	checkError(createSurfaceObject());
 
 	err = cudaDeviceSynchronize();
 	checkError(err);
@@ -87,6 +124,10 @@ int deinitCuda() {
 	cudaError_t err = cudaSuccess;
 	err = cudaFree(imgBuf);
 	checkError(err);
+
+    err = cudaDestroySurfaceObject(writeSurface);
+    checkError(err);
+
 	err = cudaFree(kernelBuf);
 	checkError(err);
 	err = cudaGraphicsUnregisterResource(resource);
@@ -108,31 +149,29 @@ int deinitCuda() {
 /// @param kernel Host buffer holding the kernel to be applied on the image this frame
 /// @param nbhd Radius of the kernel
 int filterWithCUDA(int imgWidth, int imgHeight, const float *kernel, int nbhd) {
+	cudaArray* writeArray;
 
-	cudaError_t err = cudaSuccess;
+	cudaError_t cudaStatus = cudaGraphicsMapResources(1, &resource);
+	checkError(cudaStatus);
+
+	cudaStatus = cudaGraphicsSubResourceGetMappedArray(&writeArray, resource, 0, 0);
+	checkError(cudaStatus);
 
 	size_t size = SQR(KERNEL_SIZE(nbhd))*sizeof(float);
-	err = cudaMemcpy(kernelBuf, kernel, size, cudaMemcpyHostToDevice);
-	checkError(err);
+	cudaStatus = cudaMemcpy(kernelBuf, kernel, size, cudaMemcpyHostToDevice);
+	checkError(cudaStatus);
 
-	err = cudaGraphicsMapResources(1, &resource);
-	checkError(err);
-	
-	void *destBuf = NULL;
-	err = cudaGraphicsResourceGetMappedPointer(&destBuf, &size, resource);
-	checkError(err);
+	runCudaKernel(writeSurface, imgBuf, imgWidth, imgHeight, kernelBuf, nbhd);
+	cudaStatus = cudaPeekAtLastError();
+	checkError(cudaStatus);
 
-	runCudaKernel(destBuf, imgBuf, imgWidth, imgHeight, kernelBuf, nbhd);
-	err = cudaPeekAtLastError();
-	checkError(err);
+	cudaStatus = cudaGraphicsUnmapResources(1, &resource, 0);
+	checkError(cudaStatus);
 
-	err = cudaDeviceSynchronize();
-	checkError(err);
+	cudaStatus = cudaDeviceSynchronize();
+	checkError(cudaStatus);
 
-	err = cudaGraphicsUnmapResources(1, &resource);
-	checkError(err);
-
-	return err;
+	return cudaStatus;
 }
 
 

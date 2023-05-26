@@ -15,8 +15,7 @@ __device__ float4 convolve(int i, int j, const float *kernel, int k, const uint3
 	return res;
 }
 
-__global__ void convolutionKernel(uint32 *glBuff, const uint32* srcBuff, int imgWidth, int imgHeight, const float *convKernel, int nbhd) {
-
+__global__ void convolutionKernel(cudaSurfaceObject_t surface, const uint32* srcBuff, int imgWidth, int imgHeight, const float *convKernel, int nbhd) {
 	// global thread indices for x and y
 	const int ix = blockIdx.x * blockDim.x + threadIdx.x;
 	const int iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -28,17 +27,19 @@ __global__ void convolutionKernel(uint32 *glBuff, const uint32* srcBuff, int img
 		if (ix < imgWidth && iy < imgHeight) {
 			float4 col = convolve(ix, iy, convKernel, nbhd, srcBuff, imgWidth, imgHeight);
 			col = clamp(col, 0.f, 1.f);
-			glBuff[globalID] = toInt(col);
+
+			uint32 data = toInt(col);
+    		surf2Dwrite(data, surface, ix * sizeof(uint32), iy, cudaBoundaryModeTrap);
 		}
 	} else {
-		convolveShared(glBuff, srcBuff, imgWidth, imgHeight, convKernel, nbhd);
+		convolveShared(surface, srcBuff, imgWidth, imgHeight, convKernel, nbhd);
 	}
 }
 
 extern "C"
-void runCudaKernel(void* glBuffer, void* deviceBuffer, int width, int height, void *convKernel, int nbhd) {
+void runCudaKernel(cudaSurfaceObject_t glBuffer, void* deviceBuffer, int width, int height, void *convKernel, int nbhd) {
 	dim3 threads(TILE_DIM, TILE_DIM);
 	dim3 grid(divUp(width, TILE_DIM), divUp(height, TILE_DIM));
 
-	convolutionKernel<<<grid, threads>>>((uint32*)glBuffer, (uint32*)deviceBuffer, width, height, (float*)convKernel, nbhd);
+	convolutionKernel<<<grid, threads>>>((cudaSurfaceObject_t)glBuffer, (uint32*)deviceBuffer, width, height, (float*)convKernel, nbhd);
 }

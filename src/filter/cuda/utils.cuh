@@ -3,7 +3,7 @@
 #include <cuda_runtime.h>
 
 /// Entry point of our cuda program.
-extern "C" void runCudaKernel(void* glBuffer, void* deviceBuffer, int width, int height, void *convKernel, int nbhd);
+extern "C" void runCudaKernel(cudaSurfaceObject_t glBuffer, void* deviceBuffer, int width, int height, void *convKernel, int nbhd);
 
 
 #if defined __CUDACC__
@@ -105,7 +105,7 @@ __device__ inline int getidx(int x, int y, int nbhd, int width, int height) {
 	return h*width + w;
 }
 
-__device__ void convolveShared(uint32 *glBuff, const uint32* srcBuff, int imgWidth, int imgHeight, const float *convKernel, int nbhd) {
+__device__ void convolveShared(cudaSurfaceObject_t surface, const uint32* srcBuff, int imgWidth, int imgHeight, const float *convKernel, int nbhd) {
 
 	__shared__ uint32 data[TILE_DIM + MAX_KERNEL_RADIUS*2][TILE_DIM + MAX_KERNEL_RADIUS*2];
 
@@ -162,8 +162,6 @@ __device__ void convolveShared(uint32 *glBuff, const uint32* srcBuff, int imgWid
 	if (ix < imgWidth && iy < imgHeight) {
 		// global mem address of this thread
 		// This is where we will write the final result in global memory
-		const int globalID = iy * imgWidth + ix;
-
 		const int x = threadIdx.x + nbhd;
 		const int y = threadIdx.y + nbhd;
 
@@ -176,7 +174,8 @@ __device__ void convolveShared(uint32 *glBuff, const uint32* srcBuff, int imgWid
 			}
 		}
 		sum = clamp(sum, 0.f, 1.f);
-		glBuff[globalID] = toInt(sum);
+		uint32 resultInInt = toInt(sum);
+		surf2Dwrite(resultInInt, surface, ix * sizeof(uint32), iy, cudaBoundaryModeTrap);
 	}
 }
 #endif //__CUDACC__
