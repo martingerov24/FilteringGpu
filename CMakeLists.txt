@@ -9,8 +9,10 @@ set(CONFIG_PATH ${CMAKE_SOURCE_DIR}/config)
 set(SDK_PATH ${CMAKE_SOURCE_DIR}/sdk)
 set(INCLUDES_PATH ${CMAKE_SOURCE_DIR}/includes)
 
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_CRT_SECURE_NO_WARNINGS=1 -D_UNICODE -DUNICODE")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_CRT_SECURE_NO_WARNINGS=1 -D_UNICODE -DUNICODE")
+find_package(OpenMP REQUIRED)
+
+set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -D_CRT_SECURE_NO_WARNINGS=1 -D_UNICODE -DUNICODE")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -D_CRT_SECURE_NO_WARNINGS=1 -D_UNICODE -DUNICODE")
 
 add_subdirectory (src/filter)
 add_subdirectory (src/renderer)
@@ -24,5 +26,6 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} PUBLIC
     ImageFiltering
     Renderer
+    OpenMP::OpenMP_CXX
     ${CMAKE_DL_LIBS}
 )

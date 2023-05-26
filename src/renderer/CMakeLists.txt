@@ -26,14 +26,6 @@ set(IMGUI_SOURCES
     "${IMGUI_DIR}/imgui.cpp"
 )
 
-if(DEFINED ENV{GLEW})
-    set(GLEW $ENV{GLEW})
-    set(GLEW_INCLUDES ${GLEW}/include)
-else()
-	message(FATAL_ERROR "GLEW PATH not found in environment but is required.")
-endif()
-
-
 set(IMGUI_INCLUDES 
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends 
@@ -48,7 +40,6 @@ add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${GLEW_INCLUDES}/GL
     ${OPENGL_INCLUDE_DIR} 
     ${IMGUI_INCLUDES}
     ${INCLUDES_PATH}
@@ -60,5 +51,4 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
     ${IMGUI_LIBRARIES}
     glad 
     glfw
-    GLEW
 )

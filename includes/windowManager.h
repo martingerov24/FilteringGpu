@@ -39,12 +39,13 @@ public:
         const uint32_t min, 
         const uint32_t max
     ) const;
+    void saveImage(const uint8_t* data, const int width, const int height)const;
     //changes the state of @useFilter on button click
     void useFilter(bool& useFilter) const;
     //whether to use CPU or GPU.
-    void changeState(supreme::deviceType& type) const;
+    void changeState(supreme::deviceType& type);
     //get the id of member texture.
-    uint32_t getTextureId() const { return m_texture; }
+    uint32_t getTextureId(const supreme::deviceType& type) const;
     //draws the class member texture
     //if GPU, we expext the code to save with cuda_interop, so buffer transfer from CPU->texture
     //won't be done on the draw function. 
@@ -58,9 +59,12 @@ public:
 private:
     GLFWwindow* window = nullptr;
     ImTextureID render_primitive;
-    GLuint m_texture = -1;
+    GLuint m_texture_cpu = -1;
+    GLuint m_texture_cuda = -1;
 };
 
 namespace debug {
+    int saveImage(const std::vector<uint8_t>& output, const int width, const int height);
+    int saveImage(const uint8_t* output, const int width, const int height);
     const std::vector<uint8_t>& getTextureData(const ImageParams& params, const uint32_t texture);
 }

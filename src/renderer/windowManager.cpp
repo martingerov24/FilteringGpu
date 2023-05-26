@@ -2,7 +2,7 @@
 #include "imgui/imgui.h"
 #include "imgui/backends/imgui_impl_glfw.h"
 #include "imgui/backends/imgui_impl_opengl3.h"
-
+#include "stbi_image_write.h"
 #include <cstdio>
 #include <assert.h>
 
@@ -34,21 +34,6 @@ void unbindTexture() {
     GLCall(glBindTexture(GL_TEXTURE_2D, 0));
 } 
 
-void registerBufferAsTexture(uint32_t buffer, uint32_t texture) {
-    GLCall(glBindTexture(GL_TEXTURE_BUFFER, texture));
-    GLCall(glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA8, buffer));
-}
-
-namespace debug {
-    const std::vector<uint8_t>& getTextureData(const ImageParams& params, const uint32_t texture) {
-        static std::vector<uint8_t> data(params.numberOfPixels() * RGBA_SIZE, 1);
-        bindTexture(texture);
-        GLCall(glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.data()));
-        unbindTexture();
-        return data;
-    }
-}
-
 void WindowManager::onNewFrame() const{
     GLCall(glfwPollEvents());
     GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
@@ -65,11 +50,13 @@ bool WindowManager::shouldClose() const {
     return !glfwWindowShouldClose(window);
 }
 
-void WindowManager::changeState(supreme::deviceType& type) const {
+void WindowManager::changeState(supreme::deviceType& type) {
     bool firstState = static_cast<bool>(type); 
     bool enumValue = firstState;
+
+    ImGui::SetCursorPos(ImVec2(10, 60));
     if (firstState) {
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.0f, 0.0f, 1.0f)); // Set button color to a lighter shade
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 1.0f, 0.0f, 1.0f)); // Set button color to a lighter shade
     }
     if (ImGui::Button("Use CUDA")) {
         enumValue = !enumValue;
@@ -81,9 +68,36 @@ void WindowManager::changeState(supreme::deviceType& type) const {
     type = static_cast<supreme::deviceType>(enumValue);
 }
 
+uint32_t WindowManager::getTextureId(const supreme::deviceType& type) const {
+    return type == supreme::deviceType::CPU ? m_texture_cpu : m_texture_cuda;
+}
+
 void WindowManager::useFilter(bool& useFilter) const {
+    ImGui::SetCursorPos(ImVec2(10, 30));
     if (ImGui::Button("Use Filter")) {
         useFilter = !useFilter;
+    }
+}
+
+namespace debug {
+    const std::vector<uint8_t>& getTextureData(const ImageParams& params, const uint32_t texture) {
+        static std::vector<uint8_t> data(params.numberOfPixels() * RGBA_SIZE, 1);
+        bindTexture(texture);
+        GLCall(glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.data()));
+        unbindTexture();
+        return data;
+    }
+    int saveImage(const std::vector<uint8_t>& output, const int width, const int height){
+    	return stbi_write_jpg("image.jpg", width, height, 4, output.data(), 85);
+    }
+    int saveImage(const uint8_t* output, const int width, const int height){
+    	return stbi_write_jpg("image.jpg", width, height, 4, output, 85);
+    }
+}
+
+void WindowManager::saveImage(const uint8_t* data, const int width, const int height) const {
+    if (ImGui::Button("Save Image")) {
+        debug::saveImage(data, width,height);
     }
 }
 
@@ -113,16 +127,13 @@ bool WindowManager::init(const ImageParams& params) {
     }
 	createContext();
 
-    glewExperimental = GL_TRUE;
-    GLenum glewInitResult = glewInit();
-    if (glewInitResult != GLEW_OK) {
-        return false;
-    }
-
-	GLCall(glGenTextures(1, &m_texture));
-    GLCall(bindTexture(m_texture));
+	GLCall(glGenTextures(1, &m_texture_cuda));
+    GLCall(bindTexture(m_texture_cuda));
     GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, params.width, params.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
-    render_primitive = (ImTextureID)(intptr_t)m_texture;
+    
+    GLCall(glGenTextures(1, &m_texture_cpu));
+    GLCall(bindTexture(m_texture_cpu));
+    GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, params.width, params.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
     return window;
 }
 
@@ -140,6 +151,7 @@ void WindowManager::createSlider(
     const float min, 
     const float max
 ) const {
+    ImGui::SetCursorPos(ImVec2(100, 60));
     ImGui::SliderFloat(slider_name, &value, min, max);
 }
 
@@ -149,14 +161,12 @@ void WindowManager::createSlider(
     const uint32_t min, 
     const uint32_t max
 ) const {
+    ImGui::SetCursorPos(ImVec2(100, 30));
     ImGui::SliderInt(slider_name, &value, min, max);
 }
 
 void WindowManager::swapBuffers() const {
     ImGui::End();
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-
-    ImGui::ShowDemoWindow();
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     unbindTexture();
@@ -167,11 +177,14 @@ int WindowManager::draw(const uint8_t* output, const ImageParams& params, suprem
     if(output==nullptr) {
         return -1;
     }
-    bindTexture(m_texture);
+
+    render_primitive = (ImTextureID)(intptr_t)getTextureId(type);
+    bindTexture(getTextureId(type));
     if(type == supreme::deviceType::CPU) {
-        GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, params.width, params.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, output));
+        GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, params.width, params.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, output));
     }
-    ImGui::Image(render_primitive, ImVec2(params.width, params.height));
+    ImGui::Image(render_primitive, ImVec2(1000,600));
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     return 0;
 }
 
