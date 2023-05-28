@@ -1,0 +1,9 @@
+[submodule "sdk/glfw"]
+	path = sdk/glfw
+	url = https://github.com/glfw/glfw.git
+[submodule "sdk/imgui"]
+	path = sdk/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "sdk/ImGuiFileDialog"]
+	path = sdk/ImGuiFileDialog
+	url = https://github.com/aiekick/ImGuiFileDialog.git
