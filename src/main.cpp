@@ -35,6 +35,7 @@ int main() {
     if(image.isValid() == false){
         return -1;
     }
+    
     ImageParams params(image.getHeight(), image.getWidth(), image.getWidth(), 0);
     uint8_t* byte_output_data = (uint8_t*)malloc(image.getMemUsage());
     uint32_t* image_in_four_bytes = reinterpret_cast<uint32_t*>(byte_output_data);
@@ -47,7 +48,6 @@ int main() {
     return_if_false(supreme::resizeCudaBuffer(cudaImg.size() * sizeof(cudaImg[0])));
     return_if_false(supreme::uploadCudaBuffer(cudaImg.data(), cudaImg.size() * sizeof(cudaImg[0])));
     
-
 	while (window.shouldClose()) {
         window.onNewFrame();
         window.useFilter(use_filter);

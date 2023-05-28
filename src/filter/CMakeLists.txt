@@ -13,13 +13,6 @@ if(CUDAToolkit_FOUND)
     add_compile_definitions(ALLOW_CUDA)
 endif()
 
-if(DEFINED ENV{GLEW})
-    set(GLEW $ENV{GLEW})
-    set(GLEW_INCLUDES ${GLEW}/include)
-else()
-	message(FATAL_ERROR "GLEW PATH not found in environment but is required.")
-endif()
-
 set(HEADERS 
 	${SDK_PATH}/stbi_image.h
 	${SDK_PATH}/stbi_image_write.h
@@ -50,7 +43,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${INCLUDES_PATH}
-    ${GLEW_INCLUDES}/GL
     ${SDK_PATH}
 )
 
